@@ -7,8 +7,6 @@ mod nkro;
 use core::mem::MaybeUninit;
 
 use atmega_hal::{
-    clock::MHz16,
-    delay::Delay,
     pins,
     port::{
         mode::{Input, Output, PullUp},
@@ -19,7 +17,6 @@ use atmega_hal::{
 use atmega_usbd::UsbBus;
 use avr_device::{asm::sleep, entry, interrupt};
 use avr_std_stub as _;
-use embedded_hal::blocking::delay::DelayUs;
 use nkro::NkroKeyboardReport;
 use polybius::keycode::{qmk::*, Keycode, LayerAction};
 use usb_device::{
@@ -30,13 +27,12 @@ use usbd_hid::{descriptor::SerializedDescriptor, hid_class::HIDClass};
 
 const LAYER_LOWER: u8 = 1;
 const LAYER_RAISE: u8 = 2;
-const LAYER_META: u8 = 3;
 
 const MO_LOWR: Keycode = MO(LAYER_LOWER);
 const MO_RAIS: Keycode = MO(LAYER_RAISE);
 
 #[rustfmt::skip]
-static LAYERS: [[[Keycode; 12]; 4]; 4] = [
+static LAYERS: [[[Keycode; 12]; 4]; 3] = [
     // 0: Default/Base
     [
         [KC_TAB , KC_Q   , KC_W   , KC_E   , KC_R   , KC_T   , KC_Y   , KC_U   , KC_I   , KC_O   , KC_P   , KC_BSPC],
@@ -55,13 +51,6 @@ static LAYERS: [[[Keycode; 12]; 4]; 4] = [
     [
         [KC_GRV , KC_1   , KC_2   , KC_3   , KC_4   , KC_5   , KC_6   , KC_7   , KC_8   , KC_9   , KC_0   , _______],
         [_______, _______, _______, _______, _______, _______, _______, KC_MINS, KC_EQL , KC_LBRC, KC_RBRC, KC_BSLS],
-        [_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
-        [_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
-    ],
-    // 3: Setup
-    [
-        [RESET  , _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
-        [_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
         [_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
         [_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______],
     ],
@@ -175,8 +164,6 @@ fn main() -> ! {
             hid,
         });
     }
-
-    let mut delay: Delay<MHz16> = Delay::new();
 
     unsafe { interrupt::enable() };
     loop {
