@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(abi_avr_interrupt, asm_experimental_arch)]
 
+pub mod keycode;
 mod nkro;
 
 use core::mem::MaybeUninit;
@@ -17,8 +18,8 @@ use atmega_hal::{
 use atmega_usbd::UsbBus;
 use avr_device::{asm::sleep, entry, interrupt};
 use avr_std_stub as _;
+use keycode::{qmk::*, Keycode, LayerAction};
 use nkro::NkroKeyboardReport;
-use polybius::keycode::{qmk::*, Keycode, LayerAction};
 use usb_device::{
     class_prelude::UsbBusAllocator,
     device::{UsbDevice, UsbDeviceBuilder, UsbVidPid},
